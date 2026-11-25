@@ -6,9 +6,12 @@ Writes a single famous-last-words epitaph (at most 150 characters) to
 prints it. The gate requires 1-150 UTF-8 characters, not only whitespace,
 on a single line.
 
-The entry: a dying man asks for a second opinion, and Death itself
-answers. One line of dying speech, carved in stone -- a clean twist,
-no explanation, quotable enough to repeat to a friend.
+The entry (44 chars): a dying man asks for a second opinion, and Death
+itself answers with a flat refusal. One line of dying speech, carved in
+stone -- a clean twist with no explanation, quotable enough to repeat
+to a friend. The script validates the line against the gate, writes it,
+then reads it back to confirm the file matches exactly what was
+validated, so a truncated or altered write cannot pass silently.
 """
 
 import os
@@ -24,7 +27,7 @@ def validate(text: str) -> str:
         raise SystemExit("entry is empty")
     if len(text) > MAX_CHARS:
         raise SystemExit(f"entry is {len(text)} chars, over the 150-char cap")
-    if "\n" in text.strip():
+    if "\n" in text.strip() or "\r" in text.strip():
         raise SystemExit("entry must be a single line")
     return text
 
@@ -41,7 +44,6 @@ def main() -> None:
         if f.read() != text:
             raise SystemExit("entry.txt does not match the validated entry")
     print(text)
-
 
 if __name__ == "__main__":
     main()
