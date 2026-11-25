@@ -27,8 +27,10 @@ def validate(text: str) -> str:
         raise SystemExit("entry is empty")
     if len(text) > MAX_CHARS:
         raise SystemExit(f"entry is {len(text)} chars, over the 150-char cap")
-    if "\n" in text.strip() or "\r" in text.strip():
-        raise SystemExit("entry must be a single line")
+    if text != text.strip():
+        raise SystemExit("entry must not have leading or trailing whitespace")
+    if any(ch in text for ch in ("\n", "\r", "\t")) or any(ord(ch) < 0x20 for ch in text):
+        raise SystemExit("entry must be a single line with no control characters")
     return text
 
 
@@ -38,9 +40,12 @@ def main() -> None:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, "entry.txt")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(text)
-    with open(path, encoding="utf-8") as f:
+    try:
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(text)
+    except OSError as exc:
+        raise SystemExit(f"cannot write entry.txt in {out_dir}: {exc}")
+    with open(path, encoding="utf-8", newline="") as f:
         if f.read() != text:
             raise SystemExit("entry.txt does not match the validated entry")
     print(text)
